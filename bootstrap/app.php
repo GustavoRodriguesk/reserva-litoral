@@ -12,10 +12,52 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->web(append: [
+            \App\Http\Middleware\SetTenantContext::class,
+            \App\Http\Middleware\EnsureTenantExists::class,
+            \App\Http\Middleware\EnsureActiveUser::class,
+            \App\Http\Middleware\UpdateLastActivity::class,
+        ]);
+
+        // Redireciona usuários não autenticados (convidados) que tentam acessar rotas protegidas
+        $middleware->redirectTo(fn ($request) => route('login'));
+
+        // Redireciona usuários já autenticados que tentam acessar rotas de convidados (como /login ou /register)
+        $middleware->redirectUsersTo(fn () => route('dashboard'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+
+        // Mapeia e traduz exceções brutas do PostgreSQL para feedbacks amigáveis
+        $exceptions->render(function (\Illuminate\Database\QueryException $e, Request $request) {
+            $sqlState = $e->errorInfo[0] ?? null;
+            $message = $e->getMessage();
+            $friendlyMessage = null;
+
+            if ($sqlState === '23505') {
+                $friendlyMessage = 'Este registro já está cadastrado no sistema (e-mail, documento ou identificador duplicado).';
+            } elseif ($sqlState === '23503') {
+                $friendlyMessage = 'Não é possível realizar esta operação pois este registro está vinculado a outras informações ativas no sistema.';
+            } elseif ($sqlState === '23P01') {
+                $friendlyMessage = 'Não foi possível confirmar a reserva: o quarto selecionado já está ocupado no período solicitado (overbooking bloqueado).';
+            } elseif ($sqlState === '42501' && str_contains($message, 'row-level security policy')) {
+                $friendlyMessage = 'Acesso negado: Você não tem permissão para visualizar ou alterar estas informações (restrição de tenant).';
+            }
+
+            if ($friendlyMessage) {
+                if ($request->expectsJson() || $request->is('api/*')) {
+                    return response()->json([
+                        'error' => 'database_error',
+                        'message' => $friendlyMessage,
+                        'debug' => config('app.debug') ? $e->getMessage() : null,
+                    ], $sqlState === '42501' ? 403 : 422);
+                }
+
+                return back()->withInput()->withErrors(['database_error' => $friendlyMessage]);
+            }
+
+            return null;
+        });
     })->create();

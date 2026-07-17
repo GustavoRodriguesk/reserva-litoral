@@ -37,9 +37,10 @@ class RegisteredUserController extends Controller
         ]);
 
         $user = User::create([
+            'tenant_id' => 'e7b99c71-c068-45a2-83fe-4b149b0713b1', // Tenant padrão de dev
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'password_hash' => Hash::make($request->password),
         ]);
 
         event(new Registered($user));
