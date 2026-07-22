@@ -5,6 +5,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\GuestController;
+use App\Http\Controllers\PlanningBoardController;
+use App\Http\Controllers\RoomController;
+use App\Http\Controllers\RoomTypeController;
+use App\Http\Controllers\AmenityController;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -69,6 +74,29 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/invoices/{invoice}', [\App\Http\Controllers\InvoiceController::class, 'show'])
         ->whereUuid('invoice')
         ->name('invoices.show');
+
+    // Planning Board
+    Route::get('/planning', PlanningBoardController::class)->name('planning.index');
+    Route::post('/planning/reallocate', [PlanningBoardController::class, 'reallocate'])->name('planning.reallocate');
 });
+Route::middleware(['auth'])->group(function () {
+    Route::resource('rooms', RoomController::class);
+
+    Route::post('/rooms/{room}/block', [RoomController::class, 'block'])
+        ->name('rooms.block');
+
+    Route::post('/rooms/{room}/unblock', [RoomController::class, 'unblock'])
+        ->name('rooms.unblock');
+
+    // Categorias de Quarto
+    Route::resource('room-types', RoomTypeController::class);
+    Route::post('/room-types/{roomType}/images', [RoomTypeController::class, 'uploadImage'])->name('room-types.images.upload');
+    Route::delete('/room-types/{roomType}/images/{image}', [RoomTypeController::class, 'deleteImage'])->name('room-types.images.delete');
+    Route::post('/room-types/{roomType}/images/reorder', [RoomTypeController::class, 'reorderImages'])->name('room-types.images.reorder');
+
+    // Comodidades
+    Route::resource('amenities', AmenityController::class)->only(['index', 'store', 'destroy']);
+});
+
 
 require __DIR__.'/auth.php';

@@ -8,7 +8,10 @@ use App\Models\Reservation;
 use App\Models\Room;
 use App\Services\AvailabilityService;
 use App\Services\ReservationService;
+use App\Services\CheckInService;
+use App\Services\CheckOutService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 
 class ReservationController extends Controller
@@ -16,6 +19,8 @@ class ReservationController extends Controller
     public function __construct(
         protected AvailabilityService $availabilityService,
         protected ReservationService $reservationService,
+        protected CheckInService $checkInService,
+        protected CheckOutService $checkOutService,
     ) {}
 
     public function index(Request $request)
@@ -147,82 +152,67 @@ class ReservationController extends Controller
         return view('reservations.show', compact('reservation', 'room'));
     }
 
-    public function checkin(string $reservation)
+    public function checkin(Request $request, string $reservation)
     {
         $reservation = Reservation::query()
             ->whereKey($reservation)
             ->where('hotel_id', auth()->user()->hotel_id)
+            ->with(['rooms.room', 'payments'])
             ->firstOrFail();
 
-        if ($reservation->stay_status !== 'awaiting_checkin') {
-            return back()->with('error', 'Check-in não permitido para o status atual.');
+        try {
+            $this->checkInService->execute($reservation, [
+                'document_verified' => (bool) $request->input('document_verified', true),
+                'notes'             => $request->input('checkin_notes'),
+            ]);
+
+            return back()->with('success', 'Check-in realizado com sucesso!');
+        } catch (ValidationException $e) {
+            return back()->with('error', collect($e->errors())->flatten()->first());
+        } catch (\Exception $e) {
+            return back()->with('error', 'Erro ao realizar check-in: ' . $e->getMessage());
         }
-
-        \Illuminate\Support\Facades\DB::transaction(function () use ($reservation) {
-            \Illuminate\Support\Facades\DB::table('booking.checkins')->insert([
-                'id' => \Illuminate\Support\Str::uuid(),
-                'reservation_id' => $reservation->id,
-                'checked_in_by' => auth()->id(),
-                'checked_in_at' => now(),
-                'document_verified' => true,
-            ]);
-
-            $reservation->update([
-                'stay_status' => 'checked_in',
-            ]);
-
-            foreach ($reservation->rooms as $resRoom) {
-                $resRoom->room()->update(['status' => 'occupied']);
-            }
-
-            $reservation->events()->create([
-                'event_type' => 'checkin_performed',
-                'description' => 'Check-in realizado.',
-                'performed_by' => auth()->id(),
-                'performed_at' => now(),
-            ]);
-        });
-
-        return back()->with('success', 'Check-in realizado com sucesso!');
     }
 
-    public function checkout(string $reservation)
+    public function checkout(Request $request, string $reservation)
     {
         $reservation = Reservation::query()
             ->whereKey($reservation)
             ->where('hotel_id', auth()->user()->hotel_id)
+            ->with(['rooms.room', 'payments'])
             ->firstOrFail();
 
-        if ($reservation->stay_status !== 'checked_in') {
-            return back()->with('error', 'Check-out não permitido para o status atual.');
+        // Verifica saldo antes de tentar (retorna confirmação ao frontend se houver)
+        $totalPaid = (float) $reservation->payments()->where('status', 'paid')->sum('amount');
+        $balance   = max(0, (float) $reservation->total_amount - $totalPaid);
+
+        // Se houver saldo e o usuário NÃO confirmou forçar, retorna o alerta
+        if ($balance > 0 && !$request->boolean('force_checkout')) {
+            return back()->with('checkout_balance_warning', [
+                'balance'        => $balance,
+                'reservation_id' => $reservation->id,
+            ]);
         }
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($reservation) {
-            \Illuminate\Support\Facades\DB::table('booking.checkouts')->insert([
-                'id' => \Illuminate\Support\Str::uuid(),
-                'reservation_id' => $reservation->id,
-                'checked_out_by' => auth()->id(),
-                'checked_out_at' => now(),
-                'extra_amount' => 0,
+        try {
+            $result = $this->checkOutService->execute($reservation, [
+                'block_on_balance' => false, // já foi confirmado acima
+                'damage_report'    => $request->input('damage_report'),
+                'notes'            => $request->input('checkout_notes'),
+                'extra_amount'     => 0,
             ]);
 
-            $reservation->update([
-                'stay_status' => 'checked_out',
-            ]);
-
-            foreach ($reservation->rooms as $resRoom) {
-                $resRoom->room()->update(['status' => 'cleaning']);
+            $msg = 'Check-out realizado com sucesso!';
+            if ($result['forced']) {
+                $msg .= ' Saldo devedor de R$ ' . number_format($result['balance'], 2, ',', '.') . ' permanece em aberto.';
             }
 
-            $reservation->events()->create([
-                'event_type' => 'checkout_performed',
-                'description' => 'Check-out realizado.',
-                'performed_by' => auth()->id(),
-                'performed_at' => now(),
-            ]);
-        });
-
-        return back()->with('success', 'Check-out realizado com sucesso!');
+            return back()->with('success', $msg);
+        } catch (ValidationException $e) {
+            return back()->with('error', collect($e->errors())->flatten()->first());
+        } catch (\Exception $e) {
+            return back()->with('error', 'Erro ao realizar check-out: ' . $e->getMessage());
+        }
     }
 
     public function cancel(string $reservation)

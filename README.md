@@ -1,58 +1,90 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# MecDesk PMS — Reserva Litoral
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+MecDesk PMS é um sistema de gerenciamento de propriedades hoteleiras (Property Management System) moderno, seguro e multilocatário (Multi-tenant), projetado para lidar com múltiplos hotéis e inquilinos sob um único banco de dados PostgreSQL estruturado em múltiplos schemas (`core`, `iam`, `booking`, `crm`, `finance`, `ops`, `pos`).
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🏗️ Arquitetura e Segurança (Multitenancy & RLS)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+A segurança do sistema é baseada no conceito **Fail-Closed** utilizando **Row Level Security (RLS)** nativo do PostgreSQL.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 1. Funcionamento do RLS
+*   Cada transação ou conexão vinda do Laravel executa uma instrução de contexto no início da requisição:
+    ```sql
+    SET LOCAL app.current_tenant = '<UUID-DO-TENANT>';
+    SET LOCAL app.current_user = '<UUID-DO-USUARIO>';
+    ```
+*   A função estável `iam.current_tenant_id()` resolve o tenant atual a partir desse contexto.
+*   Políticas RLS nas tabelas filtram e bloqueiam automaticamente qualquer vazamento de dados entre locatários (ex: `tenant_id = iam.current_tenant_id()`).
 
-## Learning Laravel
+### 2. Autenticação Segura (Bypass do RLS)
+*   Como a autenticação do Laravel precisa validar credenciais e recuperar o usuário antes de saber a qual Tenant ele pertence, criamos um mecanismo de bypass seguro:
+    *   **`IamUserProvider`**: Substitui o UserProvider nativo do Laravel.
+    *   **Functions `SECURITY DEFINER`**: O arquivo `2026_07_13_213726_create_auth_functions.php` cria funções PostgreSQL de propriedade do superusuário que buscam usuários e senhas por e-mail, encapsulando e limitando o acesso de leitura a tabelas seguras sem comprometer o RLS do usuário da aplicação normal.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🛡️ Middlewares no Laravel
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+Configurados no pipeline global em `bootstrap/app.php`:
+*   `SetTenantContext`: Configura as variáveis de sessão no PostgreSQL (`app.current_tenant` e `app.current_user`) para cada requisição ativa do usuário logado.
+*   `EnsureTenantExists`: Garante que o locatário está ativo e que o usuário tem um tenant atribuído.
+*   `EnsureActiveUser`: Impede o login de usuários desativados ou bloqueados no sistema.
+*   `UpdateLastActivity`: Registra as atualizações de atividade de auditoria e segurança.
 
-## Agentic Development
+---
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## 📦 Módulos Principais Implementados
 
-```bash
-composer require laravel/boost --dev
+### 1. Módulo de Hóspedes (CRM)
+*   **Rotas:** `/dashboard/guests`
+*   **Funcionalidades:**
+    *   Cadastro e edição com FormRequests (`StoreGuestRequest`, `UpdateGuestRequest`).
+    *   Validação exclusiva por tenant: impede e-mails e CPF/Documentos duplicados dentro do mesmo Tenant, mas permite a locatários diferentes terem cadastros com o mesmo e-mail.
+    *   Soft Delete ativado utilizando a coluna `deleted_at`.
+    *   Busca avançada e paginada por Nome, E-mail, Documento (CPF/Passaporte) ou Telefone.
 
-php artisan boost:install
-```
+### 2. Módulo de Reservas (Booking)
+*   **Wizard Multi-Passo (`/reservations/create`):**
+    Construído com **Alpine.js** de forma a não recarregar a página e simplificar a entrada de dados em 6 etapas:
+    *   **Passo 1 (Datas):** Seleção de período e controles interativos com botões **+** e **−** para quantidade de Adultos e Crianças.
+    *   **Passo 2 (Quarto):** Busca assíncrona de quartos livres via `apiAvailability`, estimando o valor total de diárias.
+    *   **Passo 3 (Hóspede):** Busca de hóspedes existentes em tempo real via AJAX ou abertura de modal para criação rápida de novos hóspedes sem perder o fluxo do wizard.
+    *   **Passo 4 (Extras):** Seleção de extras opcionais (Café da Manhã, Estacionamento, Cama Extra, Pet, Berço) com cálculo dinâmico de precificação (ex. diário, por hóspede ou taxa única).
+    *   **Passo 5 (Pagamento):** Definição da forma de pagamento inicial (PIX, Cartão, Dinheiro ou registrar Pendente).
+    *   **Passo 6 (Resumo):** Revisão completa dos totais e campo de observações internas antes da chamada do serviço de criação.
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 3. Detalhes da Reserva & Ações (`/reservations/{id}`)
+*   Visualização rica e profissional da estadia do hóspede.
+*   **Timeline de Eventos:** Histórico cronológico interativo (`reservation_events`) alimentado a cada ação do sistema (criação, check-in, cobranças extras, etc.).
+*   **Controle de Estadia:**
+    *   *Check-in:* Cria o registro em `booking.checkins` e altera o status do quarto no banco para `occupied`.
+    *   *Check-out:* Cria o registro em `booking.checkouts` e altera o quarto para status de limpeza `cleaning`.
+    *   *Cancelamento:* Cancela a reserva e libera o quarto imediatamente.
+*   **Lançamentos Financeiros:** Formulários integrados em modais rápidos para adicionar novas cobranças/descontos (`reservation_charges`) e registrar pagamentos (`payments`), atualizando e recalculando o saldo devedor em tempo real.
 
-## Contributing
+### 4. Emissão de Faturas (`invoices`)
+*   Fluxo de faturamento no menu de Ações da Reserva.
+*   **Geração:** Cria uma nova fatura com status `issued`, consolidando todas as cobranças e descontos gerados.
+*   **View Imprimível:** Tela limpa (sem navbar) ideal para impressão física ou exportação para PDF, contendo dados completos do hotel, do hóspede, detalhamento de itens e saldo final a pagar.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## 🛠️ Como Executar e Desenvolver
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+1.  **Configuração do Ambiente:**
+    Verifique as credenciais no arquivo `.env` para o banco de dados PostgreSQL.
+2.  **Preparar o Banco:**
+    Caso esteja recomeçando o banco, execute as migrations:
+    ```bash
+    php artisan migrate:fresh --seed
+    ```
+3.  **Servidor de Desenvolvimento:**
+    Inicie o servidor local:
+    ```bash
+    php artisan serve
+    ```
+    E inicie o Vite para compilar os assets CSS/JS em tempo real:
+    ```bash
+    npm run dev
+    ```

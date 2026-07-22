@@ -29,6 +29,11 @@ class Reservation extends Model
         return $this->belongsTo(Guest::class, 'main_guest_id');
     }
 
+    public function guest(): BelongsTo
+    {
+        return $this->belongsTo(Guest::class, 'main_guest_id');
+    }
+
     public function rooms()
     {
         return $this->hasMany(ReservationRoom::class);
@@ -47,5 +52,15 @@ class Reservation extends Model
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function getCheckInAttribute()
+    {
+        return $this->check_in_date;
+    }
+
+    public function getCheckOutAttribute()
+    {
+        return $this->check_out_date;
     }
 }

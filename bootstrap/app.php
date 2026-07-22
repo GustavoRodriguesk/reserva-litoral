@@ -19,6 +19,23 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\UpdateLastActivity::class,
         ]);
 
+        // Garante que SetTenantContext rode ANTES do SubstituteBindings.
+        // Sem isso, o route model binding (Room $room) executa a query
+        // sem o tenant configurado no PostgreSQL e a RLS retorna 0 linhas → 404.
+        $middleware->priority([
+            \Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests::class,
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
+            \App\Http\Middleware\SetTenantContext::class,
+            \App\Http\Middleware\EnsureTenantExists::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \Illuminate\Routing\Middleware\ThrottleRequests::class,
+            \Illuminate\Auth\Middleware\Authorize::class,
+        ]);
+
         // Redireciona usuários não autenticados (convidados) que tentam acessar rotas protegidas
         $middleware->redirectTo(fn ($request) => route('login'));
 

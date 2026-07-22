@@ -43,27 +43,30 @@
             
             <div class="flex flex-wrap gap-2">
                 @if($reservation->reservation_status !== 'canceled' && $reservation->stay_status === 'awaiting_checkin')
-                    <form action="{{ route('reservations.checkin', $reservation) }}" method="POST" class="inline">
-                        @csrf
-                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition shadow-sm">
-                            Realizar Check-in
-                        </button>
-                    </form>
+                    <button type="button"
+                            onclick="openModal('modal-checkin')"
+                            class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
+                        Realizar Check-in
+                    </button>
                 @endif
 
                 @if($reservation->stay_status === 'checked_in')
-                    <form action="{{ route('reservations.checkout', $reservation) }}" method="POST" class="inline">
-                        @csrf
-                        <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition shadow-sm" onclick="return confirm('Confirmar check-out e liberação do quarto para limpeza?');">
-                            Realizar Check-out
-                        </button>
-                    </form>
+                    <button type="button"
+                            onclick="openModal('modal-checkout')"
+                            class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0110.5 3h6a2.25 2.25 0 012.25 2.25v13.5A2.25 2.25 0 0116.5 21h-6a2.25 2.25 0 01-2.25-2.25V15M12 9l3 3m0 0l-3 3m3-3H2.25" /></svg>
+                        Realizar Check-out
+                    </button>
                 @endif
 
                 @if($reservation->reservation_status !== 'canceled' && $reservation->stay_status !== 'checked_out')
                     <form action="{{ route('reservations.cancel', $reservation) }}" method="POST" class="inline">
                         @csrf
-                        <button type="submit" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold px-4 py-2 rounded-lg text-sm transition shadow-sm" onclick="return confirm('Deseja realmente cancelar esta reserva?');">
+                        <button type="submit"
+                                onclick="return confirm('Deseja realmente cancelar esta reserva?');"
+                                class="inline-flex items-center gap-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold px-4 py-2 rounded-lg text-sm transition shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                             Cancelar Reserva
                         </button>
                     </form>
@@ -76,14 +79,37 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             
             @if(session('success'))
-                <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg relative" role="alert">
-                    <span class="block sm:inline font-medium">{{ session('success') }}</span>
+                <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl flex items-start gap-3" role="alert">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span class="font-medium">{{ session('success') }}</span>
                 </div>
             @endif
 
             @if(session('error'))
-                <div class="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-lg relative" role="alert">
-                    <span class="block sm:inline font-medium">{{ session('error') }}</span>
+                <div class="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-xl flex items-start gap-3" role="alert">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-rose-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+                    <span class="font-medium">{{ session('error') }}</span>
+                </div>
+            @endif
+
+            @if(session('checkout_balance_warning'))
+                @php $balWarn = session('checkout_balance_warning'); @endphp
+                <div class="bg-amber-50 border border-amber-300 text-amber-800 px-4 py-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4" role="alert">
+                    <div class="flex items-start gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+                        <div>
+                            <p class="font-bold">Saldo devedor detectado</p>
+                            <p class="text-sm mt-0.5">Esta reserva possui saldo em aberto de <strong>R$ {{ number_format($balWarn['balance'], 2, ',', '.') }}</strong>. Deseja forçar o check-out mesmo assim?</p>
+                        </div>
+                    </div>
+                    <form action="{{ route('reservations.checkout', $balWarn['reservation_id']) }}" method="POST" class="shrink-0">
+                        @csrf
+                        <input type="hidden" name="force_checkout" value="1">
+                        <button type="submit"
+                                class="bg-amber-600 hover:bg-amber-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition whitespace-nowrap">
+                            Forçar Check-out
+                        </button>
+                    </form>
                 </div>
             @endif
 
@@ -435,12 +461,211 @@
         </div>
     </div>
 
+    {{-- ===== Modal: Check-in ===== --}}
+    @if($reservation->stay_status === 'awaiting_checkin')
+    <div id="modal-checkin" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-checkin-title" role="dialog" aria-modal="true">
+        <div class="flex min-h-screen items-end justify-center px-4 pb-20 pt-4 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" onclick="closeModal('modal-checkin')"></div>
+            <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
+            <div class="relative inline-block w-full max-w-md transform overflow-hidden rounded-2xl bg-white text-left align-middle shadow-2xl transition-all sm:my-8">
+
+                <div class="bg-indigo-600 px-6 py-5">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
+                        </div>
+                        <div>
+                            <h3 id="modal-checkin-title" class="text-lg font-bold text-white">Confirmar Check-in</h3>
+                            <p class="text-indigo-200 text-sm">Reserva #{{ $reservation->locator_code }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <form action="{{ route('reservations.checkin', $reservation) }}" method="POST">
+                    @csrf
+                    <div class="px-6 py-5 space-y-5">
+
+                        {{-- Informações rápidas --}}
+                        <div class="grid grid-cols-2 gap-4 rounded-xl bg-slate-50 p-4 text-sm">
+                            <div>
+                                <p class="text-slate-500">Hóspede principal</p>
+                                <p class="font-semibold text-slate-800">{{ $reservation->mainGuest?->full_name ?? '—' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-slate-500">Quarto</p>
+                                @foreach($reservation->rooms as $rr)
+                                    <p class="font-semibold text-slate-800">{{ $rr->room->number }}</p>
+                                @endforeach
+                            </div>
+                            <div>
+                                <p class="text-slate-500">Check-in previsto</p>
+                                <p class="font-semibold text-slate-800">
+                                    {{ \Carbon\Carbon::parse($reservation->rooms->first()?->check_in_date)->format('d/m/Y') }}
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-slate-500">Check-out previsto</p>
+                                <p class="font-semibold text-slate-800">
+                                    {{ \Carbon\Carbon::parse($reservation->rooms->first()?->check_out_date)->format('d/m/Y') }}
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Documento verificado --}}
+                        <div class="flex items-start gap-3 rounded-xl border border-slate-200 p-4">
+                            <input id="document_verified" name="document_verified" type="checkbox" value="1" checked
+                                   class="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                            <div>
+                                <label for="document_verified" class="text-sm font-semibold text-slate-700 cursor-pointer">Documento verificado</label>
+                                <p class="text-xs text-slate-500 mt-0.5">Confirmo que o documento de identidade do hóspede foi conferido presencialmente.</p>
+                            </div>
+                        </div>
+
+                        {{-- Observações --}}
+                        <div>
+                            <label for="checkin_notes" class="block text-sm font-semibold text-slate-700 mb-1.5">Observações (opcional)</label>
+                            <textarea id="checkin_notes" name="checkin_notes" rows="2"
+                                      placeholder="Ex: Hóspede solicitou cama extra, berço, etc."
+                                      class="block w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                        </div>
+
+                    </div>
+                    <div class="flex gap-3 border-t border-slate-100 bg-slate-50 px-6 py-4">
+                        <button type="submit"
+                                class="flex-1 inline-flex justify-center items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            Confirmar Check-in
+                        </button>
+                        <button type="button" onclick="closeModal('modal-checkin')"
+                                class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- ===== Modal: Check-out ===== --}}
+    @if($reservation->stay_status === 'checked_in')
+    <div id="modal-checkout" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-checkout-title" role="dialog" aria-modal="true">
+        <div class="flex min-h-screen items-end justify-center px-4 pb-20 pt-4 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" onclick="closeModal('modal-checkout')"></div>
+            <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
+            <div class="relative inline-block w-full max-w-md transform overflow-hidden rounded-2xl bg-white text-left align-middle shadow-2xl transition-all sm:my-8">
+
+                <div class="bg-purple-600 px-6 py-5">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0110.5 3h6a2.25 2.25 0 012.25 2.25v13.5A2.25 2.25 0 0116.5 21h-6a2.25 2.25 0 01-2.25-2.25V15M12 9l3 3m0 0l-3 3m3-3H2.25" /></svg>
+                        </div>
+                        <div>
+                            <h3 id="modal-checkout-title" class="text-lg font-bold text-white">Confirmar Check-out</h3>
+                            <p class="text-purple-200 text-sm">Reserva #{{ $reservation->locator_code }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <form action="{{ route('reservations.checkout', $reservation) }}" method="POST">
+                    @csrf
+                    <div class="px-6 py-5 space-y-5">
+
+                        {{-- Saldo financeiro --}}
+                        @php
+                            $paidTotal  = $reservation->payments->where('status','paid')->sum('amount');
+                            $balDue     = max(0, (float)$reservation->total_amount - (float)$paidTotal);
+                        @endphp
+
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="rounded-xl bg-slate-50 p-3 text-center">
+                                <p class="text-xs text-slate-500">Total</p>
+                                <p class="font-bold text-slate-800 mt-0.5">R$ {{ number_format($reservation->total_amount, 2, ',', '.') }}</p>
+                            </div>
+                            <div class="rounded-xl bg-emerald-50 p-3 text-center">
+                                <p class="text-xs text-emerald-600">Pago</p>
+                                <p class="font-bold text-emerald-700 mt-0.5">R$ {{ number_format($paidTotal, 2, ',', '.') }}</p>
+                            </div>
+                            <div class="rounded-xl {{ $balDue > 0 ? 'bg-rose-50' : 'bg-slate-50' }} p-3 text-center">
+                                <p class="text-xs {{ $balDue > 0 ? 'text-rose-600' : 'text-slate-500' }}">Saldo</p>
+                                <p class="font-bold {{ $balDue > 0 ? 'text-rose-700' : 'text-slate-800' }} mt-0.5">R$ {{ number_format($balDue, 2, ',', '.') }}</p>
+                            </div>
+                        </div>
+
+                        @if($balDue > 0)
+                            <div class="flex items-start gap-2.5 rounded-xl bg-amber-50 border border-amber-200 p-3.5 text-sm text-amber-800">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 mt-0.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+                                <span>Há saldo devedor. O check-out ficará <strong>bloqueado</strong> se não for quitado. Clique em "Forçar" apenas em casos excepcionais.</span>
+                            </div>
+                        @else
+                            <div class="flex items-center gap-2.5 rounded-xl bg-emerald-50 border border-emerald-200 p-3.5 text-sm text-emerald-800">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <span>Reserva <strong>quitada</strong>. Check-out liberado.</span>
+                            </div>
+                        @endif
+
+                        {{-- Relatório de danos --}}
+                        <div>
+                            <label for="damage_report" class="block text-sm font-semibold text-slate-700 mb-1.5">Relatório de danos (opcional)</label>
+                            <textarea id="damage_report" name="damage_report" rows="2"
+                                      placeholder="Ex: Toalha danificada, controle remoto desaparecido..."
+                                      class="block w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm shadow-sm focus:border-purple-500 focus:ring-purple-500"></textarea>
+                        </div>
+
+                        {{-- Observações --}}
+                        <div>
+                            <label for="checkout_notes" class="block text-sm font-semibold text-slate-700 mb-1.5">Observações (opcional)</label>
+                            <textarea id="checkout_notes" name="checkout_notes" rows="2"
+                                      placeholder="Ex: Hóspede deixou chaves, pediu nota fiscal..."
+                                      class="block w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm shadow-sm focus:border-purple-500 focus:ring-purple-500"></textarea>
+                        </div>
+
+                    </div>
+                    <div class="flex gap-3 border-t border-slate-100 bg-slate-50 px-6 py-4">
+                        @if($balDue > 0)
+                            @php $balDueFormatted = number_format($balDue, 2, ',', '.'); @endphp
+                            {{-- Com saldo: botão de forçar à esquerda, cancelar à direita --}}
+                            <button type="submit" name="force_checkout" value="1"
+                                    onclick="return confirm('Confirmar check-out com saldo devedor de R$ {{ $balDueFormatted }}?')"
+                                    class="flex-1 inline-flex justify-center items-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-amber-700 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+                                Forçar Check-out
+                            </button>
+                        @else
+                            <button type="submit"
+                                    class="flex-1 inline-flex justify-center items-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-purple-700 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                Confirmar Check-out
+                            </button>
+
+                        @endif
+                        <button type="button" onclick="closeModal('modal-checkout')"
+                                class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+    @endif
+
     <script>
         function openModal(id) {
             document.getElementById(id).classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
         }
         function closeModal(id) {
             document.getElementById(id).classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
         }
+        // Fecha modal ao pressionar Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                ['modal-checkin','modal-checkout','modal-payment','modal-charge'].forEach(closeModal);
+            }
+        });
     </script>
 </x-app-layout>

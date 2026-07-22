@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Room extends Model
+class RatePlan extends Model
 {
     use HasUuids, SoftDeletes;
 
-    protected $table = 'booking.rooms';
+    protected $table = 'booking.rate_plans';
 
     public $incrementing = false;
 
@@ -19,19 +19,15 @@ class Room extends Model
 
     protected $guarded = [];
 
-    public function hotel(): BelongsTo
-    {
-        return $this->belongsTo(Hotel::class);
-    }
+    protected $casts = [
+        'is_refundable' => 'boolean',
+        'is_default' => 'boolean',
+        'is_active' => 'boolean',
+        'min_advance_days' => 'integer',
+    ];
 
     public function roomType(): BelongsTo
     {
         return $this->belongsTo(RoomType::class);
-    }
-
-    public function reservations()
-    {
-        return $this->belongsToMany(Reservation::class, 'booking.reservation_rooms', 'room_id', 'reservation_id')
-            ->withPivot(['rate_per_night', 'check_in_date', 'check_out_date']);
     }
 }

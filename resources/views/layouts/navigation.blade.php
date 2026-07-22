@@ -21,6 +21,18 @@
                     <x-nav-link :href="route('guests.index')" :active="request()->routeIs('guests.*')">
                         {{ __('Hóspedes') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('planning.index')" :active="request()->routeIs('planning.*')">
+                        {{ __('Calendario') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('rooms.index')" :active="request()->routeIs('rooms.*')">
+                        {{ __('Quartos') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('room-types.index')" :active="request()->routeIs('room-types.*')">
+                        {{ __('Categorias') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('amenities.index')" :active="request()->routeIs('amenities.*')">
+                        {{ __('Comodidades') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -76,13 +88,27 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+            
             <x-responsive-nav-link :href="route('reservations.index')" :active="request()->routeIs('reservations.*')">
                 {{ __('Reservas') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('guests.index')" :active="request()->routeIs('guests.*')">
                 {{ __('Hóspedes') }}
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('planning.index')" :active="request()->routeIs('planning.*')">
+                {{ __('Planning') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('rooms.index')" :active="request()->routeIs('rooms.*')">
+                {{ __('Quartos') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('room-types.index')" :active="request()->routeIs('room-types.*')">
+                {{ __('Categorias') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('amenities.index')" :active="request()->routeIs('amenities.*')">
+                {{ __('Comodidades') }}
+            </x-responsive-nav-link>
         </div>
+        
 
         <!-- Responsive Settings Options -->
         <div class="pt-4 pb-1 border-t border-gray-200">
