@@ -1,15 +1,13 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-                <h2 class="font-bold text-2xl text-gray-800 leading-tight">Categorias de Quartos</h2>
-                <p class="text-sm text-gray-500 mt-1">Gerencie os tipos de acomodações, preços de base, comodidades e fotos.</p>
-            </div>
-            <a href="{{ route('room-types.create') }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition shadow-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                Nova Categoria
-            </a>
-        </div>
+        <x-page-header title="Categorias de Quartos" subtitle="Gerencie os tipos de acomodações, preços de base, comodidades e fotos.">
+            <x-slot name="actions">
+                <a href="{{ route('room-types.create') }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                    Nova Categoria
+                </a>
+            </x-slot>
+        </x-page-header>
     </x-slot>
 
     <div class="py-10">
@@ -23,15 +21,14 @@
             @endif
 
             @if($roomTypes->isEmpty())
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-12 text-center">
-                    <div class="mx-auto w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mb-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v14.25M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21V12a2.25 2.25 0 012.25-2.25h1.5A2.25 2.25 0 0115 12v9m3 0V15M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21V12a2.25 2.25 0 012.25-2.25h1.5A2.25 2.25 0 0115 12v9m3 0V15" /></svg>
-                    </div>
-                    <p class="text-slate-500 font-semibold text-sm">Nenhuma categoria de quarto cadastrada</p>
-                    <p class="text-slate-400 text-xs mt-0.5">Categorias definem tipos de acomodação física como Standard, Suíte Luxo, Quarto Família, etc.</p>
-                    <a href="{{ route('room-types.create') }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition shadow-sm mt-4">
-                        Adicionar Primeira Categoria
-                    </a>
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <x-empty-state title="Nenhuma categoria de quarto cadastrada" description="Categorias definem tipos de acomodação física como Standard, Suíte Luxo, Quarto Família, etc.">
+                        <x-slot name="action">
+                            <a href="{{ route('room-types.create') }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition shadow-sm">
+                                Adicionar Primeira Categoria
+                            </a>
+                        </x-slot>
+                    </x-empty-state>
                 </div>
             @else
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -49,9 +46,7 @@
                                         </div>
                                     @endif
                                     <div class="absolute top-4 right-4">
-                                        <span class="inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase shadow-sm {{ $type->is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-slate-100 text-slate-600 border-slate-200' }}">
-                                            {{ $type->is_active ? 'Ativa' : 'Inativa' }}
-                                        </span>
+                                        <x-status-badge :status="$type->is_active ? 'active' : 'inactive'" />
                                     </div>
                                 </div>
 

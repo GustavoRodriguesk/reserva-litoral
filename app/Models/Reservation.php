@@ -36,6 +36,12 @@ class Reservation extends Model
 
     public function rooms()
     {
+        return $this->belongsToMany(Room::class, 'booking.reservation_rooms', 'reservation_id', 'room_id')
+            ->withPivot(['rate_per_night', 'check_in_date', 'check_out_date']);
+    }
+
+    public function reservationRooms()
+    {
         return $this->hasMany(ReservationRoom::class);
     }
 

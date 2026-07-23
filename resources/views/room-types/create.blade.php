@@ -1,24 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center gap-4">
-            <a href="{{ route('room-types.index') }}" class="text-slate-400 hover:text-slate-600 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
-            </a>
-            <div>
-                <h2 class="font-bold text-2xl text-gray-800 leading-tight">Nova Categoria de Quarto</h2>
-                <p class="text-sm text-gray-500 mt-1">Crie um novo tipo de acomodação para o seu hotel</p>
-            </div>
-        </div>
+        <x-page-header title="Nova Categoria de Quarto" subtitle="Crie um novo tipo de acomodação para o seu hotel" :backUrl="route('room-types.index')" />
     </x-slot>
 
     <div class="py-10">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div class="p-6 border-b border-slate-50">
-                    <h3 class="font-bold text-slate-800">Detalhes da Acomodação</h3>
-                </div>
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
-                <form action="{{ route('room-types.store') }}" method="POST" class="p-6 space-y-6">
+            <x-flash-message />
+
+            <x-form-section title="Detalhes da Acomodação">
+                <form action="{{ route('room-types.store') }}" method="POST" class="space-y-6">
                     @csrf
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -86,7 +77,7 @@
                         </button>
                     </div>
                 </form>
-            </div>
+            </x-form-section>
         </div>
     </div>
 </x-app-layout>

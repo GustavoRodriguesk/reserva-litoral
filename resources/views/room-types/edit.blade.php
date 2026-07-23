@@ -1,35 +1,11 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center gap-4">
-            <a href="{{ route('room-types.index') }}" class="text-slate-400 hover:text-slate-600 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
-            </a>
-            <div>
-                <h2 class="font-bold text-2xl text-gray-800 leading-tight">Editar Categoria: {{ $roomType->name }}</h2>
-                <p class="text-sm text-gray-500 mt-1">Configure fotos, descrições, comodidades e preços base da categoria.</p>
-            </div>
-        </div>
+        <x-page-header :title="'Editar Categoria: ' . $roomType->name" subtitle="Configure fotos, descrições, comodidades e preços base da categoria." :backUrl="route('room-types.index')" />
     </x-slot>
 
     <div class="py-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-            {{-- Flash Messages --}}
-            @if(session('success'))
-                <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl flex items-center gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    <span class="font-medium text-sm">{{ session('success') }}</span>
-                </div>
-            @endif
-
-            @if($errors->any())
-                <div class="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-xl">
-                    <ul class="list-disc pl-5 text-sm space-y-1">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+            <x-flash-message />
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {{-- Informações e Comodidades (2/3) --}}
