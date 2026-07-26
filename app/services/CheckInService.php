@@ -59,9 +59,9 @@ class CheckInService
             ]);
 
             // 3. Marca todos os quartos vinculados como ocupados
-            $reservation->load('rooms.room');
-            foreach ($reservation->rooms as $resRoom) {
-                $resRoom->room()->update(['status' => 'occupied']);
+            $reservation->load('rooms');
+            foreach ($reservation->rooms as $room) {
+                $room->update(['status' => 'occupied']);
             }
 
             // 4. Evento na timeline da reserva

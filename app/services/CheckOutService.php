@@ -72,9 +72,9 @@ class CheckOutService
             ]);
 
             // 3. Marca os quartos para limpeza
-            $reservation->load('rooms.room');
-            foreach ($reservation->rooms as $resRoom) {
-                $resRoom->room()->update(['status' => 'cleaning']);
+            $reservation->load('rooms');
+            foreach ($reservation->rooms as $room) {
+                $room->update(['status' => 'cleaning']);
             }
 
             // 4. Evento na timeline da reserva

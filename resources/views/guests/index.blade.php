@@ -1,75 +1,120 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Hóspedes') }}
-            </h2>
-            <a href="{{ route('guests.create') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:border-gray-900 focus:ring ring-gray-300 disabled:opacity-25 transition ease-in-out duration-150">
-                Novo Hóspede
-            </a>
-        </div>
+        <x-page-header title="Hóspedes" subtitle="Gerencie os dados cadastrais dos hóspedes do hotel">
+            <x-slot name="actions">
+                <a href="{{ route('guests.create') }}"
+                   class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                    Novo Hóspede
+                </a>
+            </x-slot>
+        </x-page-header>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div class="py-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             
-            @if(session('success'))
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-                    <span class="block sm:inline">{{ session('success') }}</span>
-                </div>
-            @endif
+            <x-flash-message />
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
+            {{-- Filtros --}}
+            <form method="GET" action="{{ route('guests.index') }}" class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+                <div class="flex flex-wrap items-end gap-3">
+                    <div class="flex-1 min-w-[250px]">
+                        <label class="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Buscar Hóspede</label>
+                        <div class="relative">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                            <input type="text" name="search" value="{{ $search ?? '' }}"
+                                   placeholder="Nome, e-mail, documento ou telefone..."
+                                   class="block w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-sm focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
+                        </div>
+                    </div>
                     
-                    <form method="GET" action="{{ route('guests.index') }}" class="mb-6 flex">
-                        <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Buscar por nome, e-mail, documento ou telefone..." class="border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm block w-full mt-1">
-                        <button type="submit" class="ml-3 inline-flex items-center px-4 py-2 mt-1 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:ring ring-blue-200 active:text-gray-800 active:bg-gray-50 disabled:opacity-25 transition ease-in-out duration-150">
+                    <div class="flex gap-2">
+                        <button type="submit" class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-xl text-sm transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
                             Buscar
                         </button>
-                    </form>
-
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-mail</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documento</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telefone</th>
-                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                @forelse ($guests as $guest)
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $guest->full_name }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $guest->email ?: '-' }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $guest->document_type ? $guest->document_type.': ' : '' }}{{ $guest->document_number ?: '-' }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $guest->phone ?: '-' }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <a href="{{ route('guests.edit', $guest) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Editar</a>
-                                            <form action="{{ route('guests.destroy', $guest) }}" method="POST" class="inline-block" onsubmit="return confirm('Tem certeza que deseja excluir este hóspede?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900">Excluir</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">Nenhum hóspede encontrado.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="mt-4">
-                        {{ $guests->links() }}
+                        @if(!empty($search))
+                            <a href="{{ route('guests.index') }}" class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-2 rounded-xl text-sm transition">
+                                Limpar
+                            </a>
+                        @endif
                     </div>
                 </div>
+            </form>
+
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm">
+                <x-table>
+                    <x-slot name="header">
+                        <h3 class="font-bold text-slate-800">Listagem de Hóspedes</h3>
+                    </x-slot>
+
+                    <x-slot name="head">
+                        <th class="px-6 py-3.5">Nome</th>
+                        <th class="px-6 py-3.5">E-mail</th>
+                        <th class="px-6 py-3.5">Documento</th>
+                        <th class="px-6 py-3.5">Telefone</th>
+                        <th class="px-6 py-3.5 text-right">Ações</th>
+                    </x-slot>
+
+                    @if($guests->isEmpty())
+                        <tr>
+                            <td colspan="5">
+                                <x-empty-state title="Nenhum hóspede encontrado" description="Você ainda não possui hóspedes cadastrados ou sua busca não retornou resultados.">
+                                    <x-slot name="icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
+                                    </x-slot>
+                                    <x-slot name="action">
+                                        <a href="{{ route('guests.create') }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-xl text-sm transition">
+                                            Cadastrar Hóspede
+                                        </a>
+                                    </x-slot>
+                                </x-empty-state>
+                            </td>
+                        </tr>
+                    @else
+                        @foreach($guests as $guest)
+                            <tr class="hover:bg-slate-50/50 transition">
+                                <td class="px-6 py-4 font-semibold text-slate-800">
+                                    {{ $guest->full_name }}
+                                </td>
+                                <td class="px-6 py-4 text-slate-500 text-sm">
+                                    {{ $guest->email ?: '-' }}
+                                </td>
+                                <td class="px-6 py-4 text-slate-500 text-sm">
+                                    {{ $guest->document_type ? $guest->document_type.': ' : '' }}{{ $guest->document_number ?: '-' }}
+                                </td>
+                                <td class="px-6 py-4 text-slate-500 text-sm">
+                                    {{ $guest->phone ?: '-' }}
+                                </td>
+                                    <div class="flex justify-end gap-3">
+                                        <a href="{{ route('guests.show', $guest) }}" class="text-slate-600 hover:text-slate-900 font-semibold text-xs transition">
+                                            Ver Perfil
+                                        </a>
+                                        <a href="{{ route('guests.edit', $guest) }}" class="text-indigo-600 hover:text-indigo-900 font-semibold text-xs transition">
+                                            Editar
+                                        </a>
+                                        <form action="{{ route('guests.destroy', $guest) }}" method="POST" class="inline-block" onsubmit="return confirm('Tem certeza que deseja excluir este hóspede?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-rose-600 hover:text-rose-900 font-semibold text-xs transition">
+                                                Excluir
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    @endif
+                </x-table>
+
+                @if($guests->hasPages())
+                    <div class="px-6 py-4 border-t border-slate-100">
+                        {{ $guests->links() }}
+                    </div>
+                @endif
             </div>
+
         </div>
     </div>
 </x-app-layout>

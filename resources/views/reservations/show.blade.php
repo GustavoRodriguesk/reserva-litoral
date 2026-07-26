@@ -1,11 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-                <div class="flex items-center gap-3">
-                    <h2 class="font-bold text-2xl text-gray-800 leading-tight">
-                        Reserva #{{ $reservation->locator_code }}
-                    </h2>
+        <x-page-header :title="'Reserva #' . $reservation->locator_code" :subtitle="'Criada em ' . $reservation->created_at->format('d/m/Y H:i')" :backUrl="route('reservations.index')">
+            <x-slot name="actions">
+                <div class="flex items-center gap-2 mb-4 md:mb-0 mr-4">
                     @php
                         $statusColors = [
                             'pending' => 'bg-amber-100 text-amber-800 border-amber-200',
@@ -38,59 +35,46 @@
                         {{ $stayStatusLabels[$reservation->stay_status] ?? $reservation->stay_status }}
                     </span>
                 </div>
-                <p class="text-sm text-gray-500 mt-1">Criada em {{ $reservation->created_at->format('d/m/Y H:i') }}</p>
-            </div>
-            
-            <div class="flex flex-wrap gap-2">
-                @if($reservation->reservation_status !== 'canceled' && $reservation->stay_status === 'awaiting_checkin')
-                    <button type="button"
-                            onclick="openModal('modal-checkin')"
-                            class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
-                        Realizar Check-in
-                    </button>
-                @endif
-
-                @if($reservation->stay_status === 'checked_in')
-                    <button type="button"
-                            onclick="openModal('modal-checkout')"
-                            class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0110.5 3h6a2.25 2.25 0 012.25 2.25v13.5A2.25 2.25 0 0116.5 21h-6a2.25 2.25 0 01-2.25-2.25V15M12 9l3 3m0 0l-3 3m3-3H2.25" /></svg>
-                        Realizar Check-out
-                    </button>
-                @endif
-
-                @if($reservation->reservation_status !== 'canceled' && $reservation->stay_status !== 'checked_out')
-                    <form action="{{ route('reservations.cancel', $reservation) }}" method="POST" class="inline">
-                        @csrf
-                        <button type="submit"
-                                onclick="return confirm('Deseja realmente cancelar esta reserva?');"
-                                class="inline-flex items-center gap-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold px-4 py-2 rounded-lg text-sm transition shadow-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                            Cancelar Reserva
+                
+                <div class="flex flex-wrap gap-2">
+                    @if($reservation->reservation_status !== 'canceled' && $reservation->stay_status === 'awaiting_checkin')
+                        <button type="button"
+                                onclick="openModal('modal-checkin')"
+                                class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
+                            Realizar Check-in
                         </button>
-                    </form>
-                @endif
-            </div>
-        </div>
+                    @endif
+
+                    @if($reservation->stay_status === 'checked_in')
+                        <button type="button"
+                                onclick="openModal('modal-checkout')"
+                                class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0110.5 3h6a2.25 2.25 0 012.25 2.25v13.5A2.25 2.25 0 0116.5 21h-6a2.25 2.25 0 01-2.25-2.25V15M12 9l3 3m0 0l-3 3m3-3H2.25" /></svg>
+                            Realizar Check-out
+                        </button>
+                    @endif
+
+                    @if($reservation->reservation_status !== 'canceled' && $reservation->stay_status !== 'checked_out')
+                        <form action="{{ route('reservations.cancel', $reservation) }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit"
+                                    onclick="return confirm('Deseja realmente cancelar esta reserva?');"
+                                    class="inline-flex items-center gap-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold px-4 py-2 rounded-lg text-sm transition shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                Cancelar Reserva
+                            </button>
+                        </form>
+                    @endif
+                </div>
+            </x-slot>
+        </x-page-header>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             
-            @if(session('success'))
-                <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl flex items-start gap-3" role="alert">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    <span class="font-medium">{{ session('success') }}</span>
-                </div>
-            @endif
-
-            @if(session('error'))
-                <div class="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-xl flex items-start gap-3" role="alert">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-rose-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
-                    <span class="font-medium">{{ session('error') }}</span>
-                </div>
-            @endif
+            <x-flash-message />
 
             @if(session('checkout_balance_warning'))
                 @php $balWarn = session('checkout_balance_warning'); @endphp
@@ -494,19 +478,19 @@
                             <div>
                                 <p class="text-slate-500">Quarto</p>
                                 @foreach($reservation->rooms as $rr)
-                                    <p class="font-semibold text-slate-800">{{ $rr->room->number }}</p>
+                                    <p class="font-semibold text-slate-800">{{ $rr->number }}</p>
                                 @endforeach
                             </div>
                             <div>
                                 <p class="text-slate-500">Check-in previsto</p>
                                 <p class="font-semibold text-slate-800">
-                                    {{ \Carbon\Carbon::parse($reservation->rooms->first()?->check_in_date)->format('d/m/Y') }}
+                                    {{ $reservation->check_in_date ? $reservation->check_in_date->format('d/m/Y') : '—' }}
                                 </p>
                             </div>
                             <div>
                                 <p class="text-slate-500">Check-out previsto</p>
                                 <p class="font-semibold text-slate-800">
-                                    {{ \Carbon\Carbon::parse($reservation->rooms->first()?->check_out_date)->format('d/m/Y') }}
+                                    {{ $reservation->check_out_date ? $reservation->check_out_date->format('d/m/Y') : '—' }}
                                 </p>
                             </div>
                         </div>

@@ -26,7 +26,7 @@ class PlanningBoardService
         $reservations = Reservation::query()
             ->with([
                 'mainGuest',
-                'rooms.room.roomType',
+                'rooms.roomType',
             ])
             ->whereIn('reservation_status', [
                 'confirmed',

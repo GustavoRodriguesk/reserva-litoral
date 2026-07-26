@@ -79,7 +79,7 @@
                     $nights = $invoice->reservation->check_in_date->diffInDays($invoice->reservation->check_out_date);
                 @endphp
                 @if($roomRelation)
-                    <p class="text-sm text-gray-500">Quarto {{ $roomRelation->room->number }} — {{ $roomRelation->room->roomType->name }}</p>
+                    <p class="text-sm text-gray-500">Quarto {{ $roomRelation->number }} — {{ $roomRelation->roomType->name ?? '—' }}</p>
                 @endif
                 <p class="text-sm text-gray-500">
                     {{ $invoice->reservation->check_in_date->format('d/m/Y') }}

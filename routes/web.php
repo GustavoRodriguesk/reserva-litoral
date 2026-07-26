@@ -9,7 +9,11 @@ use App\Http\Controllers\PlanningBoardController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomTypeController;
 use App\Http\Controllers\AmenityController;
-
+use App\Http\Controllers\HousekeepingController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\ReportsController;
+use App\Http\Controllers\RatePlanController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -67,19 +71,19 @@ Route::middleware(['auth'])->group(function () {
         ->name('reservations.payments.store');
 
     // Faturas
-    Route::post('/reservations/{reservation}/invoice', [\App\Http\Controllers\InvoiceController::class, 'store'])
+    Route::post('/reservations/{reservation}/invoice', [InvoiceController::class, 'store'])
         ->whereUuid('reservation')
         ->name('invoices.store');
 
-    Route::get('/invoices/{invoice}', [\App\Http\Controllers\InvoiceController::class, 'show'])
+    Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])
         ->whereUuid('invoice')
         ->name('invoices.show');
 
     // Planning Board
     Route::get('/planning', PlanningBoardController::class)->name('planning.index');
     Route::post('/planning/reallocate', [PlanningBoardController::class, 'reallocate'])->name('planning.reallocate');
-});
-Route::middleware(['auth'])->group(function () {
+
+    // Quartos
     Route::resource('rooms', RoomController::class);
 
     Route::post('/rooms/{room}/block', [RoomController::class, 'block'])
@@ -87,6 +91,21 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/rooms/{room}/unblock', [RoomController::class, 'unblock'])
         ->name('rooms.unblock');
+
+    // Configurações da Pousada
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::put('/settings/hotel', [SettingsController::class, 'updateHotel'])->name('settings.hotel');
+    Route::put('/settings/operation', [SettingsController::class, 'updateSettings'])->name('settings.operation');
+
+    // Relatórios
+    Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
+
+    // Tarifários
+    Route::resource('rate-plans', RatePlanController::class);
+
+    // Governança / Housekeeping
+    Route::get('/housekeeping', [HousekeepingController::class, 'index'])->name('housekeeping.index');
+    Route::patch('/housekeeping/rooms/{room}/status', [HousekeepingController::class, 'updateStatus'])->name('housekeeping.update-status');
 
     // Categorias de Quarto
     Route::resource('room-types', RoomTypeController::class);
@@ -97,6 +116,5 @@ Route::middleware(['auth'])->group(function () {
     // Comodidades
     Route::resource('amenities', AmenityController::class)->only(['index', 'store', 'destroy']);
 });
-
 
 require __DIR__.'/auth.php';

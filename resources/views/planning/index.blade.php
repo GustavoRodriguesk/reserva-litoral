@@ -1,23 +1,20 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <p class="text-sm font-medium text-sky-700">Planejamento</p>
-                <h2 class="text-2xl font-bold tracking-tight text-slate-900">Mapa de Reservas</h2>
-            </div>
-            
-            <!-- Legenda -->
-            <div class="flex flex-wrap gap-4 text-xs">
-                <div class="flex items-center gap-1.5 text-slate-600">
-                    <span class="w-3 h-3 rounded bg-sky-100 border border-sky-200 block"></span>
-                    <span>Confirmada (Ag. Check-in)</span>
+        <x-page-header title="Mapa de Reservas" subtitle="Planejamento">
+            <x-slot name="actions">
+                <!-- Legenda -->
+                <div class="flex flex-wrap gap-4 text-xs">
+                    <div class="flex items-center gap-1.5 text-slate-600">
+                        <span class="w-3 h-3 rounded bg-sky-100 border border-sky-200 block"></span>
+                        <span>Confirmada (Ag. Check-in)</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 text-indigo-700">
+                        <span class="w-3 h-3 rounded bg-indigo-600 border border-indigo-700 block"></span>
+                        <span>Hospedado (Check-in Ativo)</span>
+                    </div>
                 </div>
-                <div class="flex items-center gap-1.5 text-indigo-700">
-                    <span class="w-3 h-3 rounded bg-indigo-600 border border-indigo-700 block"></span>
-                    <span>Hospedado (Check-in Ativo)</span>
-                </div>
-            </div>
-        </div>
+            </x-slot>
+        </x-page-header>
     </x-slot>
 
     <div x-data="planningBoard()" class="py-8 sm:py-10">

@@ -34,7 +34,7 @@ class InvoiceController extends Controller
                 ->with('info', 'Esta reserva já possui uma fatura emitida.');
         }
 
-        $reservation->load(['charges', 'mainGuest', 'rooms.room.roomType']);
+        $reservation->load(['charges', 'mainGuest', 'rooms.roomType']);
 
         if ($reservation->charges->isEmpty()) {
             return back()->with('error', 'Esta reserva não possui cobranças para faturar.');
@@ -107,7 +107,7 @@ class InvoiceController extends Controller
         $invoice = Invoice::query()
             ->whereKey($invoice)
             ->where('hotel_id', auth()->user()->hotel_id)
-            ->with(['items', 'reservation.mainGuest', 'reservation.rooms.room.roomType', 'reservation.payments'])
+            ->with(['items', 'reservation.mainGuest', 'reservation.rooms.roomType', 'reservation.payments'])
             ->firstOrFail();
 
         // Dados do hotel

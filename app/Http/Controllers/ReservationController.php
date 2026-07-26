@@ -112,24 +112,17 @@ class ReservationController extends Controller
             ->with('success', 'Reserva criada com sucesso.');
     }
 
-    public function show(string $reservation)
+    public function show(Reservation $reservation)
     {
-        // Não use binding implícito aqui: ele ocorre antes do middleware auth
-        // e pode ser bloqueado pelo RLS por ainda não haver tenant no contexto.
-        $reservation = Reservation::query()
-            ->whereKey($reservation)
-            ->where('hotel_id', auth()->user()->hotel_id)
-            ->firstOrFail();
-
         $reservation->load([
             'mainGuest',
-            'rooms.room.roomType',
+            'rooms.roomType',
             'charges',
             'payments',
             'events.performer'
         ]);
 
-        $room = $reservation->rooms->first()?->room;
+        $room = $reservation->rooms->first();
 
         // Se a reserva acabou de ser criada e não tem cobrança de diária,
         // adiciona a cobrança de diária padrão correspondente no banco.
@@ -139,9 +132,9 @@ class ReservationController extends Controller
             if ($roomRelation) {
                 $reservation->charges()->create([
                     'charge_type' => 'diaria',
-                    'description' => "Diárias ({$nights} noites no Quarto {$roomRelation->room->number})",
+                    'description' => "Diárias ({$nights} noites no Quarto {$roomRelation->number})",
                     'quantity' => $nights,
-                    'unit_amount' => $roomRelation->rate_per_night,
+                    'unit_amount' => $roomRelation->pivot->rate_per_night ?? $roomRelation->roomType->base_price,
                     'total_amount' => $reservation->total_amount,
                     'is_discount' => false,
                 ]);
@@ -152,13 +145,9 @@ class ReservationController extends Controller
         return view('reservations.show', compact('reservation', 'room'));
     }
 
-    public function checkin(Request $request, string $reservation)
+    public function checkin(Request $request, Reservation $reservation)
     {
-        $reservation = Reservation::query()
-            ->whereKey($reservation)
-            ->where('hotel_id', auth()->user()->hotel_id)
-            ->with(['rooms.room', 'payments'])
-            ->firstOrFail();
+        $reservation->load(['rooms', 'payments']);
 
         try {
             $this->checkInService->execute($reservation, [
@@ -174,13 +163,9 @@ class ReservationController extends Controller
         }
     }
 
-    public function checkout(Request $request, string $reservation)
+    public function checkout(Request $request, Reservation $reservation)
     {
-        $reservation = Reservation::query()
-            ->whereKey($reservation)
-            ->where('hotel_id', auth()->user()->hotel_id)
-            ->with(['rooms.room', 'payments'])
-            ->firstOrFail();
+        $reservation->load(['rooms', 'payments']);
 
         // Verifica saldo antes de tentar (retorna confirmação ao frontend se houver)
         $totalPaid = (float) $reservation->payments()->where('status', 'paid')->sum('amount');
@@ -215,12 +200,8 @@ class ReservationController extends Controller
         }
     }
 
-    public function cancel(string $reservation)
+    public function cancel(Reservation $reservation)
     {
-        $reservation = Reservation::query()
-            ->whereKey($reservation)
-            ->where('hotel_id', auth()->user()->hotel_id)
-            ->firstOrFail();
 
         if (in_array($reservation->reservation_status, ['canceled', 'refunded'])) {
             return back()->with('error', 'Reserva já cancelada ou reembolsada.');
@@ -246,12 +227,8 @@ class ReservationController extends Controller
         return back()->with('success', 'Reserva cancelada com sucesso!');
     }
 
-    public function addCharge(Request $request, string $reservation)
+    public function addCharge(Request $request, Reservation $reservation)
     {
-        $reservation = Reservation::query()
-            ->whereKey($reservation)
-            ->where('hotel_id', auth()->user()->hotel_id)
-            ->firstOrFail();
 
         $validated = $request->validate([
             'charge_type' => ['required', 'string', 'in:diaria,taxa_limpeza,desconto,cupom,imposto,servico_extra'],
@@ -287,12 +264,8 @@ class ReservationController extends Controller
         return back()->with('success', 'Cobrança/desconto adicionado com sucesso!');
     }
 
-    public function addPayment(Request $request, string $reservation)
+    public function addPayment(Request $request, Reservation $reservation)
     {
-        $reservation = Reservation::query()
-            ->whereKey($reservation)
-            ->where('hotel_id', auth()->user()->hotel_id)
-            ->firstOrFail();
 
         $validated = $request->validate([
             'payment_method' => ['required', 'string', 'in:credit_card,debit_card,pix,boleto,cash,bank_transfer'],

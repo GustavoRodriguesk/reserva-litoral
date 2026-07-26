@@ -65,15 +65,31 @@ class GuestController extends Controller
     }
 
     /**
+     * Show the guest profile with reservation history.
+     */
+    public function show(Guest $guest)
+    {
+        $reservations = \App\Models\Reservation::query()
+            ->where('main_guest_id', $guest->id)
+            ->with(['rooms.roomType'])
+            ->orderByDesc('check_in_date')
+            ->get();
+
+        $totalSpent    = $reservations->sum(fn ($r) => (float) $r->total_amount);
+        $totalStays    = $reservations->whereIn('stay_status', ['checked_in', 'checked_out'])->count();
+        $upcomingCount = $reservations->where('reservation_status', 'confirmed')
+                                      ->where('stay_status', 'awaiting_checkin')
+                                      ->count();
+        $lastStay = $reservations->where('stay_status', 'checked_out')->first();
+
+        return view('guests.show', compact('guest', 'reservations', 'totalSpent', 'totalStays', 'upcomingCount', 'lastStay'));
+    }
+
+    /**
      * Show the form for editing the specified resource.
      */
     public function edit(Guest $guest)
     {
-        // Verifica tenant (segurança extra se RLS falhar)
-        if ($guest->tenant_id !== auth()->user()?->tenant_id) {
-            abort(403);
-        }
-        
         return view('guests.edit', compact('guest'));
     }
 
@@ -82,10 +98,6 @@ class GuestController extends Controller
      */
     public function update(UpdateGuestRequest $request, Guest $guest)
     {
-        if ($guest->tenant_id !== auth()->user()?->tenant_id) {
-            abort(403);
-        }
-
         $guest->update($request->validated());
 
         return redirect()->route('guests.index')->with('success', 'Hóspede atualizado com sucesso!');
@@ -96,10 +108,6 @@ class GuestController extends Controller
      */
     public function destroy(Guest $guest)
     {
-        if ($guest->tenant_id !== auth()->user()?->tenant_id) {
-            abort(403);
-        }
-
         $guest->delete();
 
         return redirect()->route('guests.index')->with('success', 'Hóspede removido com sucesso!');

@@ -32,9 +32,11 @@
                         <label class="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Status</label>
                         <select name="status" class="block w-full rounded-xl border border-slate-200 text-sm py-2 px-3 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
                             <option value="">Todos os status</option>
-                            <option value="available"    {{ request('status') === 'available'    ? 'selected' : '' }}>Disponível</option>
+                            <option value="available"    {{ request('status') === 'available'    ? 'selected' : '' }}>Livre</option>
+                            <option value="reserved"     {{ request('status') === 'reserved'     ? 'selected' : '' }}>Reservado</option>
                             <option value="occupied"     {{ request('status') === 'occupied'     ? 'selected' : '' }}>Ocupado</option>
                             <option value="cleaning"     {{ request('status') === 'cleaning'     ? 'selected' : '' }}>Limpeza</option>
+                            <option value="inspected"    {{ request('status') === 'inspected'    ? 'selected' : '' }}>Inspecionado</option>
                             <option value="maintenance"  {{ request('status') === 'maintenance'  ? 'selected' : '' }}>Manutenção</option>
                             <option value="blocked"      {{ request('status') === 'blocked'      ? 'selected' : '' }}>Bloqueado</option>
                         </select>
@@ -84,8 +86,10 @@
                         @php
                             $statusConfig = [
                                 'available'   => ['bg' => 'bg-emerald-50',  'border' => 'border-emerald-200', 'dot' => 'bg-emerald-500',  'text' => 'text-emerald-700'],
+                                'reserved'    => ['bg' => 'bg-sky-50',      'border' => 'border-sky-200',      'dot' => 'bg-sky-500',      'text' => 'text-sky-700'],
                                 'occupied'    => ['bg' => 'bg-indigo-50',   'border' => 'border-indigo-200',  'dot' => 'bg-indigo-500',   'text' => 'text-indigo-700'],
                                 'cleaning'    => ['bg' => 'bg-amber-50',    'border' => 'border-amber-200',   'dot' => 'bg-amber-400',    'text' => 'text-amber-700'],
+                                'inspected'   => ['bg' => 'bg-teal-50',     'border' => 'border-teal-200',    'dot' => 'bg-teal-500',     'text' => 'text-teal-700'],
                                 'maintenance' => ['bg' => 'bg-orange-50',   'border' => 'border-orange-200',  'dot' => 'bg-orange-500',   'text' => 'text-orange-700'],
                                 'blocked'     => ['bg' => 'bg-slate-50',    'border' => 'border-slate-200',   'dot' => 'bg-slate-400',    'text' => 'text-slate-600'],
                             ];
